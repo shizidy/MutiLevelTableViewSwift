@@ -42,8 +42,22 @@ class ViewController: UIViewController {
     @objc func button1Click(sender: UIButton) {
         let viewController = MutiLevelViewController.init()
         self.navigationController?.pushViewController(viewController, animated: true)
+        // 解决循环引用问题
+//        weak var weakself = self
+        weak var weakVC = viewController
+        // 闭包回调
+        viewController.callBack = {
+            (name) -> Void in
+            NSLog("你的选择是：\(name)")
+            weakVC?.navigationController?.popViewController(animated: true)
+        }
+        viewController.call_Back = {
+            (name) -> Void in
+            NSLog("你的选择是：\(name)")
+            weakVC?.navigationController?.popViewController(animated: true)
+        }
     }
-    
+        
     @objc func button2Click(sender: UIButton) {
         let viewController = MutiLevelCraftViewController.init()
         self.navigationController?.pushViewController(viewController, animated: true)

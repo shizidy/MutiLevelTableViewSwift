@@ -16,14 +16,14 @@ class MutiLevelViewModel: NSObject {
         self.initCraftResource()
     }
     
-    func initCityResource() {
+    func initCityResource() -> Void {
         let fileStr: String = Bundle.main.path(forResource: "cityResource", ofType: "json")!
         let jsonData = NSData.init(contentsOfFile: fileStr)
         let modelArray: Array = (jsonData?.kj.modelArray(MutiCityModel.self))!
         self.placesArray.addObjects(from: modelArray)
     }
     
-    func initCraftResource() {
+    func initCraftResource() -> Void {
         //
     }
     
@@ -34,19 +34,16 @@ class MutiLevelViewModel: NSObject {
         let placesArray = NSMutableArray.init()
         return placesArray
     }()
-    
-    /// 记录条目关闭前的条目下的展开状态 元素是字典 @[@{@"name":name, @"array":array}, @{@"name":name1, @"array":array1}] array代表数据模型的数组 name代表地名
-    lazy var statesArray: NSMutableArray = {
-        let statesArray = NSMutableArray.init()
-        return statesArray
+    /// 存储key: value
+    lazy var statesDictionary: NSMutableDictionary = {
+        let statesDictionary = NSMutableDictionary.init()
+        return statesDictionary
     }()
-    
     /// 存储数据model
     lazy var craftsArray: NSMutableArray = {
         let craftsArray = NSMutableArray.init()
         return craftsArray
     }()
-    
     /// 所有craft数据model
     lazy var allCraftsArray: NSMutableArray = {
         let allCraftsArray = NSMutableArray.init()

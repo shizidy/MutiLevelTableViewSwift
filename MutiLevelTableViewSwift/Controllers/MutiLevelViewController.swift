@@ -8,7 +8,13 @@
 
 import UIKit
 
+// 声明一个闭包
+typealias CallBack = (_ name: NSString) -> ()
+
 class MutiLevelViewController: UIViewController {
+    
+    var callBack: CallBack?
+    var call_Back: ((_ name: NSString) -> ())?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,105 +73,85 @@ extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let model: MutiCityModel = self.viewModel.placesArray[indexPath.row] as! MutiCityModel
-        //打印子层级元素
-//        let cityArray: Array = model.children
-//        if model.isExpand == 0 {
-//            for i in 0..<cityArray.count {
-//                let cityModel: MutiCityModel = cityArray[i]
-//                print(cityModel.name as Any)
-//            }
-//        }
-        
         let cell: MutiLevelCell = tableView.cellForRow(at: indexPath) as! MutiLevelCell
         
-        if model.children == nil {
+        if model.children == nil || model.children.count == 0 {
+            // 此处可回调选择
+            self.callBack!(model.name! as NSString)
+            self.call_Back!(model.name! as NSString)
+//            self.navigationController?.popViewController(animated: true)
             return
         }
+        
         if model.isExpand == 0 {
+            //MARK: - 展开层级
             model.isExpand = 1
             //旋转arrowImgView
             cell.rotateArrowImgView(CGFloat(Double.pi / 2))
             
-            var array: NSArray = NSArray.init()
-            var isMatched: Bool = false
-            if self.viewModel.statesArray.count > 0 {
-                for i in 0..<self.viewModel.statesArray.count {
-                    let mdict: NSMutableDictionary = self.viewModel.statesArray[i] as! NSMutableDictionary
-                    let name: String = mdict.object(forKey: "name") as! String
-                    if name == model.name {
-                        array = mdict["array"] as! NSArray
-                        isMatched = true
-                        break
-                    }
-                }
-                if !isMatched {
-                    array = model.children! as NSArray
-                }
-            } else {
-                array = model.children! as NSArray
-            }
-            //计算level
-            
-            
-            if !isMatched || self.viewModel.statesArray.count == 0 {
-                for i in 0..<array.count {
-                    let levelModel: MutiCityModel = array[i] as! MutiCityModel
-                    levelModel.level = model.level + 1
+            var modelArray: NSArray = []
+            for code in self.viewModel.statesDictionary.allKeys {
+                if (code as! String) == model.code {
+                    modelArray = self.viewModel.statesDictionary[code] as! NSArray
+                    break
                 }
             }
-            
-            let marray = NSMutableArray.init()
-            for i in 1...array.count {
-                let index_path: NSIndexPath = NSIndexPath.init(row: indexPath.row + i, section: 0)
-                marray.add(index_path)
-                self.viewModel.placesArray.insert(array[i - 1] as! MutiCityModel, at: indexPath.row + i)
+            // 没有匹配到
+            if modelArray.count == 0 {
+                modelArray = model.children! as NSArray
+                // 计算level
+                for subModel in modelArray {
+                    (subModel as! MutiCityModel).level = model.level + 1
+                }
             }
+            // 计算indexPathArray
+            let indexPathArray: NSMutableArray = NSMutableArray.init()
+            for i in 0..<modelArray.count {
+                let tmpIndexPath = NSIndexPath.init(row: indexPath.row + 1 + i, section: 0)
+                indexPathArray.add(tmpIndexPath)
+                // 插入数据model
+                self.viewModel.placesArray.insert(modelArray[i], at: indexPath.row + 1 + i)
+            }
+            // 插入行
             tableView.beginUpdates()
-            tableView.insertRows(at: marray as! [IndexPath], with: .automatic)
+            tableView.insertRows(at: indexPathArray as! [IndexPath], with: .automatic)
             tableView.endUpdates()
         } else {
+            //MARK: - 关闭层级
             model.isExpand = 0
             //旋转arrowImgView
             cell.rotateArrowImgView(0)
             
-            let marray: NSMutableArray = NSMutableArray.init()
-            var length: Int = 0
-            var start: Int = indexPath.row + 1
-            for i in start..<self.viewModel.placesArray.count {
-                let endModel: MutiCityModel = self.viewModel.placesArray[i] as! MutiCityModel
-                if model.level >= endModel.level {
+            /*
+             1.关闭前先把省/市/县展开时的数据保存起来
+             2.怎么查找要保存的数据，思路：1.两个相同层级（level）之间的数据即为该层级的展开状态下的数据 2.该层级与首次找到比他大的层级之间的数据
+             3.例如北京市与河北省之间，假如北京这一层级处于展开状态，在placesArray中寻找北京（level1=0）与河北省（level2=0）判断条件level1=level2，把这两者中间的数据保存起来，或者北京市市辖区（level1=1）与河北省（level2=0）之间的数据，判断条件level1>level2
+             */
+            let indexPathArray: NSMutableArray = NSMutableArray.init()
+            let modelArray: NSMutableArray = NSMutableArray.init()
+            var length: NSInteger = 0
+            var count: Int = indexPath.row + 1
+            for i in indexPath.row + 1..<self.viewModel.placesArray.count {
+                let tmpModel: MutiCityModel = self.viewModel.placesArray[i] as! MutiCityModel
+                if model.level >= tmpModel.level {
                     break
                 }
-                start += 1
-                let index_path: NSIndexPath = NSIndexPath.init(row: i, section: 0)
-                marray.add(index_path)
+                count += 1
+                let tmpIndexPath: NSIndexPath = NSIndexPath.init(row: i, section: 0)
+                indexPathArray.add(tmpIndexPath)
+                modelArray.add(tmpModel)
             }
-            //计算length
-            length = start - indexPath.row - 1
-            if length <= 0 {
+            length = count - indexPath.row - 1
+            if length == 0 {
                 return
             }
-            //存储要删除的数组状态
-            var isMatched: Bool = false
-            let modelDict: NSMutableDictionary = NSMutableDictionary.init()
-            for i in 0..<self.viewModel.statesArray.count {
-                let mdict: NSMutableDictionary = self.viewModel.statesArray[i] as! NSMutableDictionary
-                let name: String = mdict.object(forKey: "name") as! String
-                if name == model.name {
-                    mdict["array"] = self.viewModel.placesArray.subarray(with: NSRange.init(location: indexPath.row + 1, length: length))
-                    isMatched = true
-                    break
-                }
-            }
-            if !isMatched {
-                modelDict["array"] = self.viewModel.placesArray.subarray(with: NSRange.init(location: indexPath.row + 1, length: length))
-                modelDict["name"] = model.name
-                self.viewModel.statesArray.add(modelDict)
-            }
-            self.viewModel.placesArray.removeObjects(in: NSRange.init(location: indexPath.row + 1, length: length))
+            // 更新statesDictionary
+            self.viewModel.statesDictionary[model.code!] = modelArray
+            // 删除数据model
+            self.viewModel.placesArray.removeObjects(in: NSMakeRange(indexPath.row + 1, length))
             //执行删除
             tableView.beginUpdates()
-            tableView.deleteRows(at: marray as! [IndexPath], with: .automatic)
+            tableView.deleteRows(at: indexPathArray as! [IndexPath], with: .automatic)
             tableView.endUpdates()
         }
         
@@ -173,10 +159,10 @@ extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
     
     //设置系统cell分割线与屏幕等宽
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if(cell.responds(to: #selector(setter: UITableViewCell.separatorInset))){
+        if cell.responds(to: #selector(setter: UITableViewCell.separatorInset)) {
             cell.separatorInset = .zero
         }
-        if(cell.responds(to: #selector(setter: UITableViewCell.layoutMargins))){
+        if cell.responds(to: #selector(setter: UITableViewCell.layoutMargins)) {
             cell.layoutMargins = .zero
         }
     }
