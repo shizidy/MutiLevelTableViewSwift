@@ -12,8 +12,8 @@ class MutiLevelCell: UITableViewCell {
     
     /// 箭头
     var arrowImgView: UIImageView!
+    /// title
     var titleLabel: UILabel!
-    
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -36,7 +36,7 @@ class MutiLevelCell: UITableViewCell {
         self.titleLabel.textColor = .gray
     }
     
-    func fillCellWith(MutiLevelViewModel viewModel: MutiLevelViewModel, indexPath: NSIndexPath) {
+    func fillCellWith(MutiLevelViewModel viewModel: MutiLevelViewModel, indexPath: IndexPath) {
         let model: MutiCityModel = viewModel.placesArray[indexPath.row] as! MutiCityModel
         self.titleLabel.text = model.name
         self.titleLabel.frame = CGRect.init(x: CGFloat(model.level * 10), y: 0, width: UIScreen.main.bounds.size.width - 25 - CGFloat(model.level * 10), height: 50)
@@ -48,6 +48,10 @@ class MutiLevelCell: UITableViewCell {
         } else {
             self.arrowImgView.isHidden = false
         }
+    }
+    
+    func setCell(viewModel: MutiLevelViewModel, indexPath: IndexPath) -> Void {
+        self.titleLabel.text = "title"
     }
     
     func rotateArrowImgView(_ rotate: CGFloat) {

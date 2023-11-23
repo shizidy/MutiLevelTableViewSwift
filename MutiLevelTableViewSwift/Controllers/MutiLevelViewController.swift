@@ -24,7 +24,7 @@ class MutiLevelViewController: UIViewController {
     }
     
     
-    //MARK: -  懒加载
+    // MARK: -  懒加载
     lazy var tableView: UITableView = {
         let tableView = UITableView.init(frame: self.view.bounds, style: .plain)
         tableView.delegate = self
@@ -51,7 +51,7 @@ class MutiLevelViewController: UIViewController {
 }
 
 extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
-    //MARK: -  UITableViewDataSource
+    // MARK: -  UITableViewDataSource
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -62,11 +62,11 @@ extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: MutiLevelCell = tableView.dequeueReusableCell(withIdentifier: NSStringFromClass(MutiLevelCell.self), for: indexPath) as! MutiLevelCell
-        cell.fillCellWith(MutiLevelViewModel: self.viewModel, indexPath: indexPath as NSIndexPath)
+        cell.fillCellWith(MutiLevelViewModel: self.viewModel, indexPath: indexPath)
         return cell
     }
     
-    //MARK: -  UITableViewDelegate
+    // MARK: -  UITableViewDelegate
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 50
     }
@@ -117,7 +117,7 @@ extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
             tableView.insertRows(at: indexPathArray as! [IndexPath], with: .automatic)
             tableView.endUpdates()
         } else {
-            //MARK: - 关闭层级
+            // MARK: - 关闭层级
             model.isExpand = 0
             //旋转arrowImgView
             cell.rotateArrowImgView(0)
@@ -157,7 +157,7 @@ extension MutiLevelViewController: UITableViewDataSource, UITableViewDelegate {
         
     }
     
-    //设置系统cell分割线与屏幕等宽
+    // 设置系统cell分割线与屏幕等宽
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         if cell.responds(to: #selector(setter: UITableViewCell.separatorInset)) {
             cell.separatorInset = .zero

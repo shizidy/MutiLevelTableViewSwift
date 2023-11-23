@@ -28,7 +28,6 @@ class MutiLevelViewModel: NSObject {
     }
     
     //MARK: -  懒加载
-    
     /// 统一存储省市县的数据model
     lazy var placesArray: NSMutableArray = {
         let placesArray = NSMutableArray.init()
